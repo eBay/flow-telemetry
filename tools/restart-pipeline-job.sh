@@ -1,0 +1,1 @@
+tkn pipeline start -n flowtelemetry-cd $1 -L
