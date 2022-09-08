@@ -1,4 +1,4 @@
-FROM hub.tess.io/raptorhub/nodejs-base-image:nodev16-0.4.6
+FROM node:latest
 
 WORKDIR /ebay/app
 COPY --chown=ebayapp:app . /ebay/app/
