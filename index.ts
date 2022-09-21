@@ -25,6 +25,11 @@ server.get('/ping', async (request, reply) => {
 
 const githubEventProcessor: GithubEventProcessor = new GithubEventProcessor(new SpanStorage(), getJaegerProvider())
 
+server.post('/jira/webhook', async(request) => {
+  console.log("Got a JIRA webhook call")
+  console.log(request.body)
+});
+
 server.post('/github/webhook', async (request) => {
   githubEventProcessor.processEvent(request.body as Event)
 
