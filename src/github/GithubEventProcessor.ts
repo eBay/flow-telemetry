@@ -14,6 +14,8 @@ export class GithubEventProcessor {
 
     public processEvent(event:Event) {
         console.log(`Received github event with action ${event.action}`)
+        console.log(JSON.stringify(event, null, 2))
+
         if (event.pull_request && event.action == "opened") {
             this.processPullRequestOpened(event.pull_request)
         } else if (event.pull_request && event.action == "closed") {
