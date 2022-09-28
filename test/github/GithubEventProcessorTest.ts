@@ -1,7 +1,7 @@
 import {
     Comment,
     Event,
-    GithubEventProcessor, Issue, PullRequest, SpanStorage
+    GithubEventProcessor, Issue, PullRequest, PullRequestReview, SpanStorage
 } from '../../src/'
 
 import * as assert from "assert";
@@ -12,6 +12,7 @@ import {getTestingProvider} from "../testing-tracing-provider";
 const openPullRequestEvent: Event = require('./data/pull-request-opened.json')
 const closePullRequestEvent: Event = require('./data/pull-request-closed.json')
 const commentEvent: Event = require('./data/issue-comment-added.json')
+const pullRequestReviewEvent: Event = require('./data/pull-request-review-submitted.json')
 
 const spanStorage = new SpanStorage()
 const eventProcessor = new GithubEventProcessor(spanStorage, getTestingProvider())
@@ -129,6 +130,60 @@ describe('Github Event Processor', () => {
                 }
                 assert.equal(attributes.user, comment.user.login)
                 assert.equal(attributes.body, comment.body)
+            })
+        })
+        describe('Add PR Review', () => {
+            let pullRequestSpan: base.Span
+            let pullRequestReview: PullRequestReview
+
+            beforeEach(() => {
+                if (!pullRequestReviewEvent.review) {
+                    assert.fail("review is missing")
+                } else {
+                    pullRequestReview = pullRequestReviewEvent.review
+                }
+                eventProcessor.processEvent(openPullRequestEvent)
+                eventProcessor.processEvent(pullRequestReviewEvent)
+
+                const pullRequest = pullRequestReviewEvent.pull_request
+                if (!pullRequest) {
+                    assert.fail("pull request is missing")
+                }
+
+                const span: Span | undefined = spanStorage.getSpan(pullRequest.url)
+                if (!span) {
+                    assert.fail('span not found for url ' + pullRequest.url)
+                }
+                pullRequestSpan = <base.Span>span
+            })
+
+            function findReviewEvent(): TimedEvent {
+                const events = pullRequestSpan.events
+                const event: TimedEvent | undefined = events.find(e => e.name === 'review')
+                if (!event) {
+                    assert.fail('event for pull request review not found')
+                }
+
+                return event
+            }
+
+            it('Adds the review as a span event on the pull request', () => {
+                findReviewEvent()
+            })
+
+            it('Uses the submitted_at field as the time of the event', () => {
+                const event: TimedEvent = findReviewEvent()
+                assertTimestampMatchesHrtime(pullRequestReview.review.submitted_at, event.time)
+            })
+
+            it('Adds useful attributes to the review event', () => {
+                const event: TimedEvent = findReviewEvent()
+                const attributes:Attributes|undefined = event.attributes
+                if (!attributes) {
+                    assert.fail("No attributes defined")
+                }
+                assert.equal(attributes.user, pullRequestReview.review.user.login)
+                assert.equal(attributes.state, pullRequestReview.review.state)
             })
         })
 
