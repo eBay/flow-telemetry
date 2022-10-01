@@ -1,6 +1,6 @@
 {
   "name": "@ebay/flow-telemetry",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "A service that captures events from feature flow and publishes OpenTelemetry events and spans",
   "main": "index.ts",
   "author": "David Van Couvering",
