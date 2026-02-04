@@ -1,4 +1,4 @@
-FROM node:latest
+FROM node:25.6.0-bookworm
 
 WORKDIR /ebay/app
 COPY --chown=ebayapp:app . /ebay/app/
